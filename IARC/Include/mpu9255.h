@@ -7,8 +7,12 @@
 //	Define either MPU_USE_I2C or MPU_USE_SPI
 /*------------------------------------------------------------*/
 
-#define MPU_USE_I2C
-//#define MPU_USE_SPI
+//#define MPU_USE_I2C
+#define MPU_USE_SPI
+
+/*------------------------------------------------------------*/
+//	Important Macro Definitions
+/*------------------------------------------------------------*/
 
 #if defined(MPU_USE_I2C)
 
@@ -22,7 +26,7 @@
 	#include "spi.h"
 
 	// Ensure the proper spi peripheral is used
-	#define MPU_SPI	hspi2
+	#define MPU_SPI	hspi1
 
 #else
 	#error "Must define either MPU_USE_I2C or MPU_USE_SPI in main.h"
@@ -31,6 +35,9 @@
 #if defined(MPU_USE_I2C) & defined(MPU_USE_SPI)
 	#error "Must only define one of MPU_USE_I2C or MPU_USE_SPI"
 #endif
+
+#define SPI_ADDR_ADD_W_BIT(x)		(x)
+#define SPI_ADDR_ADD_R_BIT(x)		((x) | 0x80)
 
 /*------------------------------------------------------------*/
 //	Device Registers for MPU-9255

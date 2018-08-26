@@ -20,7 +20,7 @@
  *		FILE INFO:
  * 		Author: Georges Troulis
  * 		Email:	gtroulis@ucsd.edu
- * 		Driver Version Number:	0.0.2
+ * 		Driver Version Number:	0.0.3
  * 		Latest Revision Date:		08/26/2018
  *
  *		Changelog:
@@ -35,6 +35,10 @@
 /*------------------------------------------------------------*/
 static float gyroFSScale = 0;
 static float accelFSScale = 0;
+
+#ifdef MPU_USE_SPI
+	uint8_t spiTxBuf[32];
+#endif
 
 /**
  * 	Initializes the accelerometer, and certain private variables
@@ -158,7 +162,6 @@ HAL_StatusTypeDef MPU_GetGyroscopeRaw(int16_t *gx, int16_t *gy, int16_t *gz) {
 	*gz = ((uint16_t) buf[4] << 8) | buf[5];
 
 	return status;
-	return 0;
 }
 
 /**
@@ -289,7 +292,26 @@ HAL_StatusTypeDef MPU_WriteLen(uint8_t reg, uint8_t len, uint8_t *buf) {
 	#if defined(MPU_USE_I2C)
 		status = HAL_I2C_Mem_Write(&MPU_I2C, MPU_ADDR_W, reg, I2C_MEMADD_SIZE_8BIT, buf, len, MPU_DEFAULT_TIMEOUT);
 	#elif defined(MPU_USE_SPI)
-		//status = TODO SPI IMPL
+
+		// The first byte of the transfer is the register address plus a write bit
+		spiTxBuf[0] = SPI_ADDR_ADD_W_BIT(reg);
+
+		// Initiate the SPI transfer
+		HAL_GPIO_WritePin(Gyro_CS_GPIO_Port, Gyro_CS_Pin, GPIO_PIN_RESET);
+
+		// Transmit the register address to read from. If not ok status, end
+		// SPI transfer early and return
+		status = HAL_SPI_Transmit(&MPU_SPI, spiTxBuf, 1, MPU_DEFAULT_TIMEOUT);
+		if (status != HAL_OK) {
+			HAL_GPIO_WritePin(Gyro_CS_GPIO_Port, Gyro_CS_Pin, GPIO_PIN_SET);
+			return status;
+		}
+
+		// Write the actual data
+		status = HAL_SPI_Transmit(&MPU_SPI, buf, len, MPU_DEFAULT_TIMEOUT);
+
+		// Finalize the SPI transfer
+		HAL_GPIO_WritePin(Gyro_CS_GPIO_Port, Gyro_CS_Pin, GPIO_PIN_SET);
 	#endif
 	return status;
 }
@@ -301,13 +323,32 @@ HAL_StatusTypeDef MPU_WriteLen(uint8_t reg, uint8_t len, uint8_t *buf) {
  *	len:	The number of bytes to read
  *	buf:	The buffer into which to place data (must be properly initialized)
  */
-
 HAL_StatusTypeDef MPU_ReadLen(uint8_t reg, uint8_t len, uint8_t *buf) {
 	HAL_StatusTypeDef status;
 	#if defined(MPU_USE_I2C)
 		status = HAL_I2C_Mem_Read(&MPU_I2C, MPU_ADDR_R, reg, I2C_MEMADD_SIZE_8BIT, buf, len, MPU_DEFAULT_TIMEOUT);
 	#elif defined(MPU_USE_SPI)
-		//status = TODO SPI IMPL
+
+		// The first byte of the transfer is the register address plus a read bit
+		spiTxBuf[0] = SPI_ADDR_ADD_R_BIT(reg);
+
+		// Initiate the SPI transfer
+		HAL_GPIO_WritePin(Gyro_CS_GPIO_Port, Gyro_CS_Pin, GPIO_PIN_RESET);
+
+		// Transmit the register address to read from. If not ok status, end
+		// SPI transfer early and return
+		status = HAL_SPI_Transmit(&MPU_SPI, spiTxBuf, 1, MPU_DEFAULT_TIMEOUT);
+		if (status != HAL_OK) {
+			HAL_GPIO_WritePin(Gyro_CS_GPIO_Port, Gyro_CS_Pin, GPIO_PIN_SET);
+			return status;
+		}
+
+		// Read the actual data
+		status = HAL_SPI_Receive(&MPU_SPI, buf, len, MPU_DEFAULT_TIMEOUT);
+
+		// Finalize the SPI transfer
+		HAL_GPIO_WritePin(Gyro_CS_GPIO_Port, Gyro_CS_Pin, GPIO_PIN_SET);
 	#endif
+
 	return status;
 }

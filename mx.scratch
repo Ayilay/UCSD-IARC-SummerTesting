@@ -30,7 +30,7 @@
     	<board>NUCLEO-F446RE</board>
 			
     <usedDebug>true</usedDebug>
-    	<debugprobe></debugprobe>
+    	<debugprobe>swd</debugprobe>
     <optimization>6</optimization>
     <icfloc>0</icfloc>
     <Adefines>

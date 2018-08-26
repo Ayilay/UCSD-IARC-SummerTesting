@@ -93,7 +93,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
-  MX_SPI2_Init();
+  MX_SPI1_Init();
 
   /* USER CODE BEGIN 2 */
 
@@ -102,11 +102,12 @@ int main(void)
   SSD1306_Init();
 
   char buf[64];
-  float temperature;
-  uint16_t val;
+  uint8_t whoami;
   uint16_t row;
 	float accels[3];
 	int16_t accelsRaw[3];
+	float gyro[3];
+	int16_t gyroRaw[3];
   HAL_StatusTypeDef status;
 
 
@@ -116,18 +117,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		/* USER CODE END WHILE */
+  /* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
+  /* USER CODE BEGIN 3 */
 
   	// Grab the temperature of the sensor
   	//status = MPU_GetAccelerationsRaw(&accelsRaw[0], &accelsRaw[1], &accelsRaw[2]);
   	status = MPU_GetAccelerations(&accels[0], &accels[1], &accels[2]);
+  	//status = MPU_GetGyroscope(&gyro[0], &gyro[1], &gyro[2]);
 
   	for (row = 0; row < 3; row ++) {
 			SSD1306_SetCursor(0, row * 10);
 			sprintf(buf, "A%c: %.2f", 'x'+row, accels[row]);
-			//sprintf(buf, "A%c: %d", 'x'+row, accelsRaw[row]);
+			//sprintf(buf, "G%c: %d", 'x'+row, gyroRaw[row]);
 			SSD1306_WriteString(buf, Font_7x10, White);
   	}
 
