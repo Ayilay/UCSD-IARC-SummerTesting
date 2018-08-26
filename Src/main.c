@@ -40,10 +40,11 @@
 #include "main.h"
 #include "stm32f4xx_hal.h"
 #include "i2c.h"
+#include "spi.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "mpu6050.h"
+#include "mpu9255.h"
 #include "ssd1306.h"
 
 /* USER CODE END Includes */
@@ -59,7 +60,7 @@ void SystemClock_Config(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+char* HALStatusToStr(HAL_StatusTypeDef status);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -92,17 +93,22 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
+  MX_SPI2_Init();
 
   /* USER CODE BEGIN 2 */
 
-  // Initialize the I2C display
+  // Initialize the sensors
+  MPU_Init();
   SSD1306_Init();
 
-  char	buf[16] = {0};
+  char buf[64];
+  float temperature;
+  uint16_t val;
+  uint16_t row;
+	float accels[3];
+	int16_t accelsRaw[3];
+  HAL_StatusTypeDef status;
 
-  uint8_t count = 0;
-
-  MPU_Set_Accel_Fsr(0);
 
   /* USER CODE END 2 */
 
@@ -110,26 +116,23 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-  /* USER CODE END WHILE */
+		/* USER CODE END WHILE */
 
-  /* USER CODE BEGIN 3 */
-		count ++;
+		/* USER CODE BEGIN 3 */
 
-  	uint8_t whoami;
-		MPU_Read_Byte(MPU_WHO_AM_I_REG, &whoami);
-  	SSD1306_SetCursor(0, 10);
-		sprintf(buf, "whoami: %#x", whoami);
-  	SSD1306_WriteString(buf, Font_7x10, White);
+  	// Grab the temperature of the sensor
+  	//status = MPU_GetAccelerationsRaw(&accelsRaw[0], &accelsRaw[1], &accelsRaw[2]);
+  	status = MPU_GetAccelerations(&accels[0], &accels[1], &accels[2]);
 
-		int16_t accelX = MPU_GetAccelerationX();
-		float accelXF = accelX / 4096.0;
-
-		sprintf(buf, "AccelX: %.2f", accelXF);
-
-  	SSD1306_SetCursor(0, 0);
-		SSD1306_WriteString(buf, Font_7x10, White);
+  	for (row = 0; row < 3; row ++) {
+			SSD1306_SetCursor(0, row * 10);
+			sprintf(buf, "A%c: %.2f", 'x'+row, accels[row]);
+			//sprintf(buf, "A%c: %d", 'x'+row, accelsRaw[row]);
+			SSD1306_WriteString(buf, Font_7x10, White);
+  	}
 
 		SSD1306_UpdateScreen();
+
 
   	HAL_Delay(100);
   }
@@ -149,7 +152,7 @@ void SystemClock_Config(void)
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
@@ -160,7 +163,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 16;
   RCC_OscInitStruct.PLL.PLLN = 336;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
   RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -174,10 +177,10 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -196,28 +199,26 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-/* USER CODE END 4 */
-
-/**
-  * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM2 interrupt took place, inside
-  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
-  * a global variable "uwTick" used as application time base.
-  * @param  htim : TIM handle
-  * @retval None
-  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-/* USER CODE BEGIN Callback 0 */
-
-/* USER CODE END Callback 0 */
-  if (htim->Instance == TIM2) {
-    HAL_IncTick();
-  }
-/* USER CODE BEGIN Callback 1 */
-
-/* USER CODE END Callback 1 */
+char* HALStatusToStr(HAL_StatusTypeDef status) {
+	switch (status) {
+		case HAL_OK:
+			return "HAL_OK";
+			break;
+		case HAL_TIMEOUT:
+			return "HAL_TIMEOUT";
+			break;
+		case HAL_ERROR:
+			return "HAL_ERROR";
+			break;
+		case HAL_BUSY:
+			return "HAL_BUSY";
+			break;
+		default:
+			return "BAD_STAT";
+	}
 }
+
+/* USER CODE END 4 */
 
 /**
   * @brief  This function is executed in case of error occurrence.
