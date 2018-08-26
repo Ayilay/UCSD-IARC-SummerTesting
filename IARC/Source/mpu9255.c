@@ -17,11 +17,13 @@
  * 					are called at least once and given user-desired arguments, otherwise this Driver File
  * 					might result in unexpected behaviour.
  *
+ *		FILE INFO:
  * 		Author: Georges Troulis
  * 		Email:	gtroulis@ucsd.edu
- * 		Driver Version Number:	0.0.1
+ * 		Driver Version Number:	0.0.2
  * 		Latest Revision Date:		08/26/2018
  *
+ *		Changelog:
  */
 
 #include "mpu9255.h"
@@ -35,12 +37,12 @@ static float gyroFSScale = 0;
 static float accelFSScale = 0;
 
 /**
- * 	Sets the full scale range of the gyroscope,
- * 	and updates the scaling factor for gyroscope values read
- * 	from the sensor
+ * 	Initializes the accelerometer, and certain private variables
+ * 	pertaining to the functionality of this driver.
  *
- * 	fsRange:	The new full scale range of the gyroscope. Use the
- * 						macros defined in mpu9255.h to ensure correct functionality
+ *	The parameters to MPU_SetAccelFSRange and MPU_SetGyroFSRange
+ *	may change depending on the application, but both functions
+ *	must be called at least once.
  */
 HAL_StatusTypeDef MPU_Init(void) {
 	HAL_StatusTypeDef status = 0;
@@ -48,7 +50,7 @@ HAL_StatusTypeDef MPU_Init(void) {
 	status |= MPU_SetAccelFSRange(MPU_ACCEL_FS_2G);
 	status |= MPU_SetGyroFSRange(MPU_GYRO_FS_1000DPS);
 
-	return status;
+	return (status == HAL_OK ? HAL_OK : HAL_ERROR);
 }
 
 /**
@@ -59,7 +61,6 @@ HAL_StatusTypeDef MPU_Init(void) {
  * 	fsRange:	The new full scale range of the accelerometer. Use the
  * 						macros defined in mpu9255.h to ensure correct functionality
  */
-
 HAL_StatusTypeDef MPU_SetAccelFSRange(uint8_t fsRange) {
 	accelFSScale = pow(2, fsRange) / 16384;
 
@@ -67,6 +68,14 @@ HAL_StatusTypeDef MPU_SetAccelFSRange(uint8_t fsRange) {
 }
 
 
+/**
+ * 	Sets the full scale range of the gyroscope,
+ * 	and updates the scaling factor for gyroscope values read
+ * 	from the sensor
+ *
+ * 	fsRange:	The new full scale range of the gyroscope. Use the
+ * 						macros defined in mpu9255.h to ensure correct functionality
+ */
 HAL_StatusTypeDef MPU_SetGyroFSRange(uint8_t fsRange) {
 	gyroFSScale = pow(2, fsRange) / 232;
 
