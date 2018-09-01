@@ -51,8 +51,14 @@ static float accelFSScale = 0;
 HAL_StatusTypeDef MPU_Init(void) {
 	HAL_StatusTypeDef status = 0;
 
+	// Configure the full scale ranges of the gyro/accel sensors
 	status |= MPU_SetAccelFSRange(MPU_ACCEL_FS_2G);
 	status |= MPU_SetGyroFSRange(MPU_GYRO_FS_1000DPS);
+
+	// Configure the auxillary I2C bus to communicate with the magnetometer
+	status |= MPU_WriteByte(MPU_I2C_SLV0_ADDR_REG, MAG_ADDR_READ);
+	status |= MPU_WriteByte(MPU_I2C_SLV0_REG_REG, MAG_HXL_REG);
+	status |= MPU_WriteBits(MPU_I2C_SLV0_CTRL_REG, 6, 3, 4);
 
 	return (status == HAL_OK ? HAL_OK : HAL_ERROR);
 }
@@ -138,6 +144,9 @@ HAL_StatusTypeDef MPU_GetAccelerations(float *ax, float *ay, float *az) {
 	return status;
 }
 
+HAL_StatusTypeDef MPU_GetMagnetometer(float *mx, float *my, float *mz) {
+	return HAL_OK;
+}
 
 /**
  * 	Reads the x, y, and z gyroscope values in burst-read mode
@@ -187,6 +196,10 @@ HAL_StatusTypeDef MPU_GetAccelerationsRaw(int16_t *ax, int16_t *ay, int16_t *az)
 	*az = ((uint16_t) buf[4] << 8) | buf[5];
 
 	return status;
+}
+
+HAL_StatusTypeDef MPU_GetMagnetometerRaw(int16_t *mx, int16_t *my, int16_t *mz) {
+	return HAL_OK;
 }
 
 

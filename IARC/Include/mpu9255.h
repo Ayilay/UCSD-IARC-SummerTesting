@@ -66,6 +66,10 @@
 #define MPU_FIFO_EN_REG				0x23
 #define MPU_I2CMST_CTRL_REG		0x24
 
+#define MPU_I2C_SLV0_ADDR_REG	0x25
+#define MPU_I2C_SLV0_REG_REG	0x26
+#define MPU_I2C_SLV0_CTRL_REG	0x27
+
 #define MPU_I2CMST_STA_REG		0x36
 #define MPU_INT_PIN_CFG_REG		0x37
 #define MPU_INT_EN_REG				0x38
@@ -110,6 +114,35 @@
 #define MPU_ADDR_R            (MPU_ADDR << 1) | 1
 
 /*------------------------------------------------------------*/
+//	AK8963 Embedded Magnetometer Registers
+/*------------------------------------------------------------*/
+
+#define MAG_ADDR							0x0C
+#define MAG_ADDR_READ					0x0C | 0x80
+#define MAG_ADDR_WRITE				0x0C
+
+#define MAG_ID_REG						0x00
+#define MAG_INFO_REG					0x01
+#define MAG_ST1_REG						0x02
+
+// Data registers
+#define MAG_HXL_REG						0x03
+#define MAG_HXH_REG						0x04
+#define MAG_HYL_REG						0x05
+#define MAG_HYH_REG						0x06
+#define MAG_HZL_REG						0x07
+#define MAG_HZH_REG						0x08
+
+#define MAG_ST2_REG						0x09
+#define MAG_CNTL1_REG					0x0A
+#define MAG_CNTL2_REG					0x0B
+
+#define MAG_ASAX_REG					0x10
+#define MAG_ASAY_REG					0x11
+#define MAG_ASAZ_REG					0x12
+
+
+/*------------------------------------------------------------*/
 //	Config Options for certain device registers
 /*------------------------------------------------------------*/
 
@@ -141,12 +174,14 @@ HAL_StatusTypeDef MPU_Init(void);
 HAL_StatusTypeDef MPU_GetTemperature(float* tempBuf);
 HAL_StatusTypeDef MPU_GetGyroscope(float *gx, float *gy, float *gz);
 HAL_StatusTypeDef MPU_GetAccelerations(float *ax, float *ay, float *az);
+HAL_StatusTypeDef MPU_GetMagnetometer(float *mx, float *my, float *mz);
 HAL_StatusTypeDef MPU_SetAccelFSRange(uint8_t range);
 HAL_StatusTypeDef MPU_SetGyroFSRange(uint8_t range);
 
 // Debug Funcs
 HAL_StatusTypeDef MPU_GetGyroscopeRaw(int16_t *gx, int16_t *gy, int16_t *gz);
 HAL_StatusTypeDef MPU_GetAccelerationsRaw(int16_t *ax, int16_t *ay, int16_t *az);
+HAL_StatusTypeDef MPU_GetMagnetometerRaw(int16_t *mx, int16_t *my, int16_t *mz);
 HAL_StatusTypeDef MPU_Surprise(uint16_t* output);
 
 // Utility Funcs, only for Low-Level purposes
