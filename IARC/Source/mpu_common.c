@@ -15,14 +15,13 @@
  *
  *     Author:               Georges Troulis
  *     Email:                gtroulis@ucsd.edu
- *     Driver Version:       0.1.0
+ *     Driver Version:       0.2.0
  *     Last Revision Date:   08/26/2018
  *
  *     ================================================================================
  *
  *     Changelog:
- *       0.1.0:              Added macro-dependent compilation flags and migrated all
- *                           register definitions to this file
+ *       0.2.0:              Disabled sleep mode in Init()
  */
 
 #include <mpu_common.h>
@@ -51,8 +50,14 @@ float gyroFSScale;
 HAL_StatusTypeDef MPU_Init(void) {
   HAL_StatusTypeDef status = 0;
 
+  // Set the clock source to PLL with X Axis Gyroscope as reference
+  status |= MPU_WriteBits(PWR_MGMT1_REG, 1, 2, 3);
+
   status |= MPU_SetAccelFSRange(MPU_ACCEL_FS_2G);
-  status |= MPU_SetGyroFSRange(MPU_GYRO_FS_1000DPS);
+  status |= MPU_SetGyroFSRange(MPU_GYRO_FS_2000DPS);
+
+  // Disable sleep mode
+  status |= MPU_WriteBits(PWR_MGMT1_REG, 0, 6, 1);
 
   return (status == HAL_OK ? HAL_OK : HAL_ERROR);
 }
@@ -217,10 +222,11 @@ HAL_StatusTypeDef MPU_GetTemperature(float* temp) {
 
 HAL_StatusTypeDef MPU_Surprise(uint16_t* output) {
   HAL_StatusTypeDef status;
-  uint8_t buf[2];
+  uint8_t buf[2] = {0};
 
-  status = MPU_ReadLen(ACCEL_XOUTH_REG, 2, buf);
-  *output = ((uint16_t) buf[0] << 8) | buf[1];
+  status = MPU_ReadLen(PWR_MGMT1_REG, 1, buf);
+  //*output = ((uint16_t) buf[0] << 8) | buf[1];
+  *output = buf[0];
 
   return status;
 }

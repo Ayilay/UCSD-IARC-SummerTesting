@@ -71,6 +71,12 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  HAL_StatusTypeDef status;
+  char buf[64];
+  float data[3];
+  //int16_t dataRaw[3];
+  int counter = 0;
+
 
   /* USER CODE END 1 */
 
@@ -98,18 +104,19 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // Initialize the sensors
-  MPU_Init();
   SSD1306_Init();
 
-  char buf[64];
-  //uint8_t whoami;
-  //uint16_t row;
-	float accels[3];
-	//int16_t accelsRaw[3];
-	//float gyro[3];
-	//int16_t gyroRaw[3];
-  HAL_StatusTypeDef status;
+  // Ensure MPU is initialized properly
+  status = MPU_Init();
+  if (status != HAL_OK) {
+    SSD1306_SetCursor(0, 0);
+    sprintf(buf, "MPU BAD INIT");
+    SSD1306_WriteString(buf, Font_7x10, White);
+    SSD1306_UpdateScreen();
 
+    while (1);
+
+  }
 
   /* USER CODE END 2 */
 
@@ -121,30 +128,23 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 
-  	// Grab the temperature of the sensor
-  	//status = MPU_GetAccelerationsRaw(&accelsRaw[0], &accelsRaw[1], &accelsRaw[2]);
-  	status = MPU_GetAccelerations(&accels[0], &accels[1], &accels[2]);
-  	//status = MPU_GetGyroscope(&gyro[0], &gyro[1], &gyro[2]);
+    // Grab the temperature of the sensor
+    //status = MPU_GetAccelerationsRaw(&dataRaw[0], &dataRaw[1], &dataRaw[2]);
+    status = MPU_GetAccelerations(&data[0], &data[1], &data[2]);
+    //uint8_t data;
+    //status = MPU_Surprise(&data);
 
-  	//for (row = 0; row < 3; row ++) {
-		//	SSD1306_SetCursor(0, row * 10);
-		//	sprintf(buf, "A%c: %.2f      ", 'x'+row, accels[row]);
-		//	//sprintf(buf, "G%c: %d", 'x'+row, gyroRaw[row]);
-		//	SSD1306_WriteString(buf, Font_7x10, White);
-  	//}
+    for (int i = 0; i < 3; i++) {
+      SSD1306_SetCursor(0, i*10);
+      sprintf(buf, "A%c: %.2f      ", 'x'+i, data[i]);
+      //sprintf(buf, "data: %#X", data);
+      SSD1306_WriteString(buf, Font_7x10, White);
+    }
 
-		SSD1306_SetCursor(0, 0);
-		sprintf(buf, "A%c: %.2f      ", 'x', accels[0]);
-		SSD1306_WriteString(buf, Font_7x10, White);
-
-		SSD1306_SetCursor(0, 10);
-		sprintf(buf, "Status: %s", HALStatusToStr(status));
-		SSD1306_WriteString(buf, Font_7x10, White);
-
-		SSD1306_UpdateScreen();
+    SSD1306_UpdateScreen();
 
 
-  	HAL_Delay(100);
+    HAL_Delay(100);
   }
   /* USER CODE END 3 */
 
@@ -210,22 +210,22 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 char* HALStatusToStr(HAL_StatusTypeDef status) {
-	switch (status) {
-		case HAL_OK:
-			return "HAL_OK";
-			break;
-		case HAL_TIMEOUT:
-			return "HAL_TIMEOUT";
-			break;
-		case HAL_ERROR:
-			return "HAL_ERROR";
-			break;
-		case HAL_BUSY:
-			return "HAL_BUSY";
-			break;
-		default:
-			return "BAD_STAT";
-	}
+  switch (status) {
+    case HAL_OK:
+      return "HAL_OK";
+      break;
+    case HAL_TIMEOUT:
+      return "HAL_TIMEOUT";
+      break;
+    case HAL_ERROR:
+      return "HAL_ERROR";
+      break;
+    case HAL_BUSY:
+      return "HAL_BUSY";
+      break;
+    default:
+      return "BAD_STAT";
+  }
 }
 
 /* USER CODE END 4 */
