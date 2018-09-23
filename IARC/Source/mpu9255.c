@@ -20,8 +20,8 @@
  *		FILE INFO:
  * 		Author: Georges Troulis
  * 		Email:	gtroulis@ucsd.edu
- * 		Driver Version Number:	0.0.3
- * 		Latest Revision Date:		08/26/2018
+ * 		Driver Version Number:	0.0.5
+ * 		Latest Revision Date:		09/01/2018
  *
  *		Changelog:
  */
@@ -35,6 +35,7 @@
 /*------------------------------------------------------------*/
 static float gyroFSScale = 0;
 static float accelFSScale = 0;
+static float magFSScale = 1;
 
 #ifdef MPU_USE_SPI
 	uint8_t spiTxBuf[32];
@@ -55,10 +56,28 @@ HAL_StatusTypeDef MPU_Init(void) {
 	status |= MPU_SetAccelFSRange(MPU_ACCEL_FS_2G);
 	status |= MPU_SetGyroFSRange(MPU_GYRO_FS_1000DPS);
 
-	// Configure the auxillary I2C bus to communicate with the magnetometer
-	status |= MPU_WriteByte(MPU_I2C_SLV0_ADDR_REG, MAG_ADDR_READ);
-	status |= MPU_WriteByte(MPU_I2C_SLV0_REG_REG, MAG_HXL_REG);
-	status |= MPU_WriteBits(MPU_I2C_SLV0_CTRL_REG, 6, 3, 4);
+	#if defined(MPU_USE_SPI)
+		// If using SPI, we must tell the sensor to use the auxillary I2C bus itself
+		// and populate the external data registers with the magnetometer data
+
+		// Configure Slave 0 to be the magnetometer, and include the Read bit
+		status |= MPU_WriteByte(MPU_I2C_SLV0_ADDR_REG, MAG_ADDR_READ);
+
+		// Configure the first register to read from to be the magnetometer data
+		status |= MPU_WriteByte(MPU_I2C_SLV0_REG_REG, MAG_HXL_REG);
+
+		// Set the read size from slave 0 to be 6 bytes of data
+		status |= MPU_WriteBits(MPU_I2C_SLV0_CTRL_REG, 6, 3, 4);
+
+		// Enable automatic reading of the Magnetometer in the EXT_SENS registers
+		status |= MPU_WriteBits(MPU_I2C_SLV0_CTRL_REG, 1, 7, 1);
+	#elif defined(MPU_USE_I2C)
+		// If using I2C, we can use I2C pass-through mode to communicate directly
+		// with the embedded magnetometer
+
+		// Enable the bypass mux to connect the aux I2C bus with the main I2C bus
+		status |= MPU_WriteBits(MPU_INT_PIN_CFG_REG, 1, 1, 1);
+	#endif
 
 	return (status == HAL_OK ? HAL_OK : HAL_ERROR);
 }
@@ -145,7 +164,17 @@ HAL_StatusTypeDef MPU_GetAccelerations(float *ax, float *ay, float *az) {
 }
 
 HAL_StatusTypeDef MPU_GetMagnetometer(float *mx, float *my, float *mz) {
-	return HAL_OK;
+
+	HAL_StatusTypeDef status;
+	int16_t xRaw, yRaw, zRaw;
+
+	status = MPU_GetMagnetometerRaw(&xRaw, &yRaw, &zRaw);
+
+	*mx = ((float) xRaw) * magFSScale;
+	*my = ((float) yRaw) * magFSScale;
+	*mz = ((float) zRaw) * magFSScale;
+
+	return status;
 }
 
 /**
@@ -198,8 +227,41 @@ HAL_StatusTypeDef MPU_GetAccelerationsRaw(int16_t *ax, int16_t *ay, int16_t *az)
 	return status;
 }
 
+/**
+ * 	Reads the x, y, and z magnetometer values from the sensor's auxillary I2C
+ * 	bus.
+ *
+ *	In SPI Mode, read from the MPU sensor's External Sensor data registers,
+ *	which are configured during init() to be automatically populated by regular
+ *	samples.
+ *
+ *	In I2C Mode, the auxilliary I2C bus is connected to the master bus, so use
+ *	the master bus to directly read from the magnetometer
+ *
+ * 	mx:	memory location into which to place the x magnetometer reading
+ * 	my:	memory location into which to place the y magnetometer reading
+ * 	mz:	memory location into which to place the z magnetometer reading
+ */
 HAL_StatusTypeDef MPU_GetMagnetometerRaw(int16_t *mx, int16_t *my, int16_t *mz) {
-	return HAL_OK;
+	HAL_StatusTypeDef status;
+	uint8_t buf[6];
+
+#if defined(MPU_USE_SPI)
+	status = MPU_ReadLen(MPU_EXT_SENS_DATA_REG, 6, buf);
+#elif defined(MPU_USE_I2C)
+	// Enable the bypass mux to connect the aux I2C bus with the main I2C bus
+	status = MPU_WriteBits(MPU_INT_PIN_CFG_REG, 1, 1, 1);
+	status = MPU_ReadByte(MPU_INT_PIN_CFG_REG, buf);
+
+	status = HAL_I2C_Mem_Read(&MPU_I2C, 0x0C, MAG_HXL_REG,
+														I2C_MEMADD_SIZE_8BIT, buf, 6, MPU_DEFAULT_TIMEOUT);
+#endif
+
+	*mx = ((uint16_t) buf[0] << 8) | buf[1];
+	*my = ((uint16_t) buf[2] << 8) | buf[3];
+	*mz = ((uint16_t) buf[4] << 8) | buf[5];
+
+	return status;
 }
 
 

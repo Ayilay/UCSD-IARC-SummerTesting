@@ -103,9 +103,9 @@ int main(void)
 
   char buf[64];
   uint16_t row;
-	float accels[3];
+	float dataF[3];
   HAL_StatusTypeDef status;
-	//int16_t accelsRaw[3];
+	int16_t data[3];
 	//float gyro[3];
 	//int16_t gyroRaw[3];
   //uint8_t whoami;
@@ -123,15 +123,22 @@ int main(void)
 
   	// Grab the temperature of the sensor
   	//status = MPU_GetAccelerationsRaw(&accelsRaw[0], &accelsRaw[1], &accelsRaw[2]);
-  	status = MPU_GetAccelerations(&accels[0], &accels[1], &accels[2]);
+  	//status = MPU_GetAccelerations(&dataF[0], &dataF[1], &dataF[2]);
   	//status = MPU_GetGyroscope(&gyro[0], &gyro[1], &gyro[2]);
+  	//status = MPU_GetMagnetometer(&dataF[0], &dataF[1], &dataF[2]);
+  	status = MPU_GetMagnetometerRaw(&data[0], &data[1], &data[2]);
 
-  	for (row = 0; row < 3; row ++) {
-			SSD1306_SetCursor(0, row * 10);
-			sprintf(buf, "A%c: %.2f", 'x'+row, accels[row]);
-			//sprintf(buf, "G%c: %d", 'x'+row, gyroRaw[row]);
-			SSD1306_WriteString(buf, Font_7x10, White);
-  	}
+  	//for (row = 0; row < 1; row ++) {
+		//	SSD1306_SetCursor(0, row * 10);
+		//	//sprintf(buf, "D%c: %.2f", 'x'+row, dataF[row]);
+		//	sprintf(buf, "D%c: %d", 'x'+row, data[row]);
+		//	SSD1306_WriteString(buf, Font_7x10, White);
+  	//}
+
+  	row = 1;
+		sprintf(buf, "Stat: %s", HALStatusToStr(status));
+		SSD1306_SetCursor(0, row * 10);
+		SSD1306_WriteString(buf, Font_7x10, White);
 
 		SSD1306_UpdateScreen();
 

@@ -7,8 +7,8 @@
 //	Define either MPU_USE_I2C or MPU_USE_SPI
 /*------------------------------------------------------------*/
 
-//#define MPU_USE_I2C
-#define MPU_USE_SPI
+#define MPU_USE_I2C
+//#define MPU_USE_SPI
 
 /*------------------------------------------------------------*/
 //	Important Macro Definitions
@@ -92,6 +92,8 @@
 #define MPU_GYRO_ZOUTH_REG		0x47
 #define MPU_GYRO_ZOUTL_REG		0x48
 
+#define MPU_EXT_SENS_DATA_REG	0x49
+
 #define MPU_SIGPATH_RST_REG		0x68
 #define MPU_MDETECT_CTRL_REG	0x69
 #define MPU_USER_CTRL_REG			0x6A
@@ -163,7 +165,7 @@
 //	Other Constants
 /*------------------------------------------------------------*/
 
-#define MPU_DEFAULT_TIMEOUT	200
+#define MPU_DEFAULT_TIMEOUT	20
 
 /*------------------------------------------------------------*/
 //	Public Interface Functions
