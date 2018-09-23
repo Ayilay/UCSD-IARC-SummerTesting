@@ -10,25 +10,25 @@
 #ifndef SSD1306_H
 #define SSD1306_H
 
-#define SSD1306_I2C_PORT		hi2c1 // The HAL I2C HandleTypeDef used for this screen
+#define SSD1306_I2C_PORT    hi2c1 // The HAL I2C HandleTypeDef used for this screen
 
-#define SSD1306_I2C_ADDR    0x78	// I2C Address of device
-#define SSD1306_WIDTH       128		// Dimensions in Pixels
+#define SSD1306_I2C_ADDR    0x78  // I2C Address of device
+#define SSD1306_WIDTH       128    // Dimensions in Pixels
 #define SSD1306_HEIGHT      32
 
 
 
 typedef enum {
-	Black = 0x00, /*!< Black color, no pixel */
-	White = 0x01  /*!< Pixel is set. Color depends on LCD */
+  Black = 0x00, /*!< Black color, no pixel */
+  White = 0x01  /*!< Pixel is set. Color depends on LCD */
 } SSD1306_COLOR;
 
 
 typedef struct {
-	uint16_t CurrentX;
-	uint16_t CurrentY;
-	uint8_t Inverted;
-	uint8_t Initialized;
+  uint16_t CurrentX;
+  uint16_t CurrentY;
+  uint8_t Inverted;
+  uint8_t Initialized;
 } SSD1306_t;
 
 uint8_t SSD1306_Init(void);

@@ -102,12 +102,12 @@ int main(void)
   SSD1306_Init();
 
   char buf[64];
-  uint8_t whoami;
-  uint16_t row;
+  //uint8_t whoami;
+  //uint16_t row;
 	float accels[3];
-	int16_t accelsRaw[3];
-	float gyro[3];
-	int16_t gyroRaw[3];
+	//int16_t accelsRaw[3];
+	//float gyro[3];
+	//int16_t gyroRaw[3];
   HAL_StatusTypeDef status;
 
 
