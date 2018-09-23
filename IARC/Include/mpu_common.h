@@ -22,8 +22,8 @@
  *
  *     Author:               Georges Troulis
  *     Email:                gtroulis@ucsd.edu
- *     Driver Version:        0.1.0
- *     Last Revision Date:    08/26/2018
+ *     Driver Version:       0.1.0
+ *     Last Revision Date:   08/26/2018
  *
  *    ================================================================================
  *
