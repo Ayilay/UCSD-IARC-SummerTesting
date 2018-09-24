@@ -44,7 +44,7 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "mpu9255.h"
+#include "mpu_common.h"
 #include "ssd1306.h"
 
 /* USER CODE END Includes */
@@ -126,12 +126,20 @@ int main(void)
   	status = MPU_GetAccelerations(&accels[0], &accels[1], &accels[2]);
   	//status = MPU_GetGyroscope(&gyro[0], &gyro[1], &gyro[2]);
 
-  	for (row = 0; row < 3; row ++) {
-			SSD1306_SetCursor(0, row * 10);
-			sprintf(buf, "A%c: %.2f", 'x'+row, accels[row]);
-			//sprintf(buf, "G%c: %d", 'x'+row, gyroRaw[row]);
-			SSD1306_WriteString(buf, Font_7x10, White);
-  	}
+  	//for (row = 0; row < 3; row ++) {
+		//	SSD1306_SetCursor(0, row * 10);
+		//	sprintf(buf, "A%c: %.2f      ", 'x'+row, accels[row]);
+		//	//sprintf(buf, "G%c: %d", 'x'+row, gyroRaw[row]);
+		//	SSD1306_WriteString(buf, Font_7x10, White);
+  	//}
+
+		SSD1306_SetCursor(0, 0);
+		sprintf(buf, "A%c: %.2f      ", 'x', accels[0]);
+		SSD1306_WriteString(buf, Font_7x10, White);
+
+		SSD1306_SetCursor(0, 10);
+		sprintf(buf, "Status: %s", HALStatusToStr(status));
+		SSD1306_WriteString(buf, Font_7x10, White);
 
 		SSD1306_UpdateScreen();
 
