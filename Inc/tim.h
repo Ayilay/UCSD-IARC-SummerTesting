@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : SPI.h
+  * File Name          : TIM.h
   * Description        : This file provides code for the configuration
-  *                      of the SPI instances.
+  *                      of the TIM instances.
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -37,21 +37,19 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __spi_H
-#define __spi_H
+#ifndef __tim_H
+#define __tim_H
 #ifdef __cplusplus
  extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_hal.h"
+#include "stm32f4xx_ll_tim.h"
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
-
-extern SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN Private defines */
 
@@ -59,7 +57,7 @@ extern SPI_HandleTypeDef hspi1;
 
 extern void _Error_Handler(char *, int);
 
-void MX_SPI1_Init(void);
+void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
@@ -68,7 +66,7 @@ void MX_SPI1_Init(void);
 #ifdef __cplusplus
 }
 #endif
-#endif /*__ spi_H */
+#endif /*__ tim_H */
 
 /**
   * @}

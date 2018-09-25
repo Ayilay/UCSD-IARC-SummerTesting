@@ -13,9 +13,11 @@ IARC  | Portable firmware files developed by us that use HAL Libraries. Main del
 ### MPU\_COMMON
 Driver for Invensense 9-axis accelerometers. Supports mpu9255 and mpu9150 devices
 
-### SSD1306 and Fonts
+### ESC
+Driver for Electronic Speed Controllers that propell our drones
+
+### SSD1306 and Fonts (Not created by us)
 Driver for the 128x32 I2C OLED Display found on Adafruit
 
 ## Main Developers
 * Georges Troulis
-* *more people*

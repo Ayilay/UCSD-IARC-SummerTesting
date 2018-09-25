@@ -1,7 +1,8 @@
+
 /**
   ******************************************************************************
-  * File Name          : main.c
-  * Description        : Main program body
+  * @file           : main.c
+  * @brief          : Main program body
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -35,17 +36,18 @@
   *
   ******************************************************************************
   */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
 #include "i2c.h"
 #include "spi.h"
+#include "tim.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
 #include "mpu_common.h"
 #include "ssd1306.h"
+#include "esc.h"
 
 /* USER CODE END Includes */
 
@@ -67,17 +69,14 @@ char* HALStatusToStr(HAL_StatusTypeDef status);
 
 /* USER CODE END 0 */
 
+/**
+  * @brief  The application entry point.
+  *
+  * @retval None
+  */
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
-  HAL_StatusTypeDef status;
-  char buf[64];
-  float data[3];
-  //int16_t dataRaw[3];
-  int counter = 0;
-
-
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -98,25 +97,17 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C1_Init();
+  MX_TIM2_Init();
   MX_SPI1_Init();
-
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   // Initialize the sensors
-  SSD1306_Init();
+  //SSD1306_Init();
+  //MPU_Init();
+  ESC_Init();
 
-  // Ensure MPU is initialized properly
-  status = MPU_Init();
-  if (status != HAL_OK) {
-    SSD1306_SetCursor(0, 0);
-    sprintf(buf, "MPU BAD INIT");
-    SSD1306_WriteString(buf, Font_7x10, White);
-    SSD1306_UpdateScreen();
 
-    while (1);
-
-  }
 
   /* USER CODE END 2 */
 
@@ -127,31 +118,27 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+    ESC_SetSpeed(ESC1, 0.25);
+    ESC_SetSpeed(ESC2, 0.50);
+    ESC_SetSpeed(ESC3, 0.75);
+    ESC_SetSpeed(ESC4, 1.00);
+    HAL_Delay(200);
 
-    // Grab the temperature of the sensor
-    //status = MPU_GetAccelerationsRaw(&dataRaw[0], &dataRaw[1], &dataRaw[2]);
-    status = MPU_GetAccelerations(&data[0], &data[1], &data[2]);
-    //uint8_t data;
-    //status = MPU_Surprise(&data);
+    ESC_Stop(ESC1);
+    ESC_Stop(ESC2);
+    //ESC_Stop(ESC3);
+    //ESC_Stop(ESC4);
+    HAL_Delay(200);
 
-    for (int i = 0; i < 3; i++) {
-      SSD1306_SetCursor(0, i*10);
-      sprintf(buf, "A%c: %.2f      ", 'x'+i, data[i]);
-      //sprintf(buf, "data: %#X", data);
-      SSD1306_WriteString(buf, Font_7x10, White);
-    }
-
-    SSD1306_UpdateScreen();
-
-
-    HAL_Delay(100);
   }
   /* USER CODE END 3 */
 
 }
 
-/** System Clock Configuration
-*/
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
 
@@ -188,7 +175,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
@@ -232,45 +219,43 @@ char* HALStatusToStr(HAL_StatusTypeDef status) {
 
 /**
   * @brief  This function is executed in case of error occurrence.
-  * @param  None
+  * @param  file: The file name as string.
+  * @param  line: The line in file as a number.
   * @retval None
   */
-void _Error_Handler(char * file, int line)
+void _Error_Handler(char *file, int line)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   while(1) 
   {
   }
-  /* USER CODE END Error_Handler_Debug */ 
+  /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
-
+#ifdef  USE_FULL_ASSERT
 /**
-   * @brief Reports the name of the source file and the source line number
-   * where the assert_param error has occurred.
-   * @param file: pointer to the source file name
-   * @param line: assert_param error line source number
-   * @retval None
-   */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t* file, uint32_t line)
-{
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
-
 }
-
-#endif
-
-/**
-  * @}
-  */ 
+#endif /* USE_FULL_ASSERT */
 
 /**
   * @}
-*/ 
+  */
+
+/**
+  * @}
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
