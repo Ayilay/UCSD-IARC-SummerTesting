@@ -44,12 +44,14 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_ll_tim.h"
+#include "stm32f4xx_hal.h"
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
+
+extern TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN Private defines */
 
@@ -58,7 +60,9 @@
 extern void _Error_Handler(char *, int);
 
 void MX_TIM2_Init(void);
-
+                        
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+                    
 /* USER CODE BEGIN Prototypes */
 
 /* USER CODE END Prototypes */

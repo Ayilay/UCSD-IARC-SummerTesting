@@ -45,7 +45,7 @@
 									<listOptionValue builtIn="false" value="STM32F446xx" />
 									<listOptionValue builtIn="false" value="__weak=&quot;__attribute__((weak))&quot;" />
 									<listOptionValue builtIn="false" value="__packed=&quot;__attribute__((__packed__))&quot;" />
-								<listOptionValue builtIn="false" value="USE_FULL_LL_DRIVER" /></option>
+								</option>
 								<option id="fr.ac6.managedbuild.gnu.c.compiler.option.misc.other.1865007759" superClass="fr.ac6.managedbuild.gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0" valueType="string" />
 								<option id="gnu.c.compiler.option.dialect.std.440545173" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated" />
 								<option id="fr.ac6.managedbuid.gnu.c.compiler.option.misc.other.223177914" name="Other flags" superClass="fr.ac6.managedbuid.gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0" valueType="string" />
@@ -130,7 +130,7 @@
 									<listOptionValue builtIn="false" value="STM32F446xx" />
 									<listOptionValue builtIn="false" value="__weak=&quot;__attribute__((weak))&quot;" />
 									<listOptionValue builtIn="false" value="__packed=&quot;__attribute__((__packed__))&quot;" />
-								<listOptionValue builtIn="false" value="USE_FULL_LL_DRIVER" /></option>
+								</option>
 								<option id="fr.ac6.managedbuild.gnu.c.compiler.option.misc.other.1865007759" superClass="fr.ac6.managedbuild.gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0" valueType="string" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c.1381526691" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.s.684548760" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.s" />

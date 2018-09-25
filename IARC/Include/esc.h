@@ -13,26 +13,25 @@
  *     (2) In STM32CubeMX, ensure all Timers used have the same frequency (APB1 and APB2
  *          are the same frequency), and then modify the prescaler below in esc.h
  *          appropriately to scale that frequency to 1 MHz
- *     (3) In esc.c, modify the ESCx_TIM macros for each ESC to match the Timer
- *         used for each ESC channel
- *     (4) In esc.c, modify the ESCx_CH macros for each ESC to match the LL_TIM channel
- *         used for each ESC (independent of timer used)
- *     (5) Modify the ESCx_SET_CCR_FUNC macros to contain the pointer to the function
- *         that is used to change the CCR (Capture/Compare Register) of each ESC channel.
- *
- *         ex: if ESC3 uses Channel 2 of TIMx (timer is irrelevant), modify
- *             ESC3_SET_CCR_FUNC to be (LL_TIM_OC_SetCompareCH2)
+ *     (3) In esc.c, modify the ESCx_TIMHANDLE macros for each ESC to match the
+ *         HAL TIM_TypeDef used for each ESC channel
+ *     (4) In esc.c, modify the ESCx_CH macros for each ESC to match the TIM_CHANNEL_x
+ *         used for each ESC
+ *         ex: if ESC2 uses channel 5 of Timer7, then set ESC2_CH to TIM_CHANNEL_5
+ *             (Timer used is irrelevant for this field but ESC must belong to channel
+ *             of said timer)
  *
  *    ================================================================================
  *
  *     Author:               Georges Troulis
  *     Email:                gtroulis@ucsd.edu
- *     Driver Version:       0.1.1
+ *     Driver Version:       0.2.0
  *     Last Revision Date:   09/25/2018
  *
  *    ================================================================================
  *
  *    Changelog:
+ *      0.2.0:    Modified to use HAL instead of LL
  */
 
 #ifndef INCLUDE_ESC_H

@@ -12,12 +12,13 @@
  *
  *     Author:               Georges Troulis
  *     Email:                gtroulis@ucsd.edu
- *     Driver Version:       0.1.1
+ *     Driver Version:       0.2.0
  *     Last Revision Date:   09/25/2018
  *
  *     ================================================================================
  *
  *     Changelog:
+ *      0.2.0:    Modified to use HAL instead of LL
  */
 
 #include "esc.h"
@@ -27,50 +28,37 @@
 //  (3) Modify the below macros to match the TIM peripheral
 //      used for each ESC channel
 /*------------------------------------------------------------*/
-#define ESC1_TIM  TIM2
-#define ESC2_TIM  TIM2
-#define ESC3_TIM  TIM2
-#define ESC4_TIM  TIM2
+#define ESC1_TIMHANDLE  &htim2
+#define ESC2_TIMHANDLE  &htim2
+#define ESC3_TIMHANDLE  &htim2
+#define ESC4_TIMHANDLE  &htim2
 
 /*------------------------------------------------------------*/
 //  (4) Modify the below macros to match the channel of the
 //      TIM peripheral used for each ESC channel
 /*------------------------------------------------------------*/
-#define ESC1_CH   LL_TIM_CHANNEL_CH1
-#define ESC2_CH   LL_TIM_CHANNEL_CH2
-#define ESC3_CH   LL_TIM_CHANNEL_CH4
-#define ESC4_CH   LL_TIM_CHANNEL_CH3
-
-/*------------------------------------------------------------*/
-//  (5) Modify the below macros to match the LL function name
-//      of the LL function that modifies the CCR (Capture-
-//      Compare Register) of the appropriate channel
-/*------------------------------------------------------------*/
-
-#define ESC1_SET_CCR_FUNC   (LL_TIM_OC_SetCompareCH1)
-#define ESC2_SET_CCR_FUNC   (LL_TIM_OC_SetCompareCH2)
-#define ESC3_SET_CCR_FUNC   (LL_TIM_OC_SetCompareCH4)
-#define ESC4_SET_CCR_FUNC   (LL_TIM_OC_SetCompareCH3)
-
+#define ESC1_CH   TIM_CHANNEL_1
+#define ESC2_CH   TIM_CHANNEL_2
+#define ESC3_CH   TIM_CHANNEL_3
+#define ESC4_CH   TIM_CHANNEL_4
 
 /*------------------------------------------------------------*/
 //  Internal data structure which contains information about
 //  an ESC channel
 /*------------------------------------------------------------*/
 typedef struct {
-  TIM_TypeDef* tim;
+  TIM_HandleTypeDef* timHandle;
   uint32_t timCh;
-  void (*SetCompareChannelPeriod)(TIM_TypeDef *TIMx, uint32_t CompareValue);
 } esc_t;
 
 /*------------------------------------------------------------*/
 //  Internal array that holds all ESC channels
 /*------------------------------------------------------------*/
 esc_t motors[4] = {
-    {ESC1_TIM, ESC1_CH, ESC1_SET_CCR_FUNC},
-    {ESC2_TIM, ESC2_CH, ESC2_SET_CCR_FUNC},
-    {ESC3_TIM, ESC3_CH, ESC3_SET_CCR_FUNC},
-    {ESC4_TIM, ESC4_CH, ESC4_SET_CCR_FUNC}
+    {ESC1_TIMHANDLE, ESC1_CH},
+    {ESC2_TIMHANDLE, ESC2_CH},
+    {ESC3_TIMHANDLE, ESC3_CH},
+    {ESC4_TIMHANDLE, ESC4_CH}
 };
 
 /*------------------------------------------------------------*/
@@ -86,8 +74,8 @@ void ESC_Init() {
   // Configure the timer of each ESC with the appropriate prescaler
   // and counter period, then disable the output channel
   for (int i = 0; i < 4; i++) {
-    LL_TIM_SetPrescaler(motors[i].tim, ESC_PSC_84MHz_1MHz);
-    LL_TIM_SetAutoReload(motors[i].tim, ESC_TIM_CNT_END);
+    __HAL_TIM_SET_PRESCALER(motors[i].timHandle, ESC_PSC_84MHz_1MHz);
+    __HAL_TIM_SET_AUTORELOAD(motors[i].timHandle, ESC_TIM_CNT_END);
 
     ESC_Stop(i);
   }
@@ -95,7 +83,7 @@ void ESC_Init() {
   // Enable the Timer counters for each channel (No output
   // will be generated yet because channels are disabled)
   for (int i = 0; i < 4; i++) {
-    LL_TIM_EnableCounter(motors[i].tim);
+    __HAL_TIM_ENABLE(motors[i].timHandle);
   }
 }
 
@@ -169,11 +157,9 @@ void ESC_SetPWMPulseWidth(uint32_t escInd, uint32_t pwmPeriodMicros) {
   esc_t* esc = &motors[escInd];
 
   // Enable the Capture Compare channel in case it was disabled
-  LL_TIM_CC_EnableChannel(esc->tim, esc->timCh);
+  // Bypass HAL for minimum overhead
+  TIM_CCxChannelCmd(esc->timHandle->Instance, esc->timCh, TIM_CCx_ENABLE);
 
-  // Invoke the appropriate "SetCompareChannelPeriod" function to set
-  // the pulse width of the given ESC channel. Each channel has
-  // a different function, thus the function pointers of the functions
-  // were used to parameterize setting the pulse width on the fly
-  (*esc->SetCompareChannelPeriod)(esc->tim, pwmPeriodMicros);
+  // Set the pulse width of the ESC channel
+  __HAL_TIM_SET_COMPARE(esc->timHandle, esc->timCh, pwmPeriodMicros);
 }
