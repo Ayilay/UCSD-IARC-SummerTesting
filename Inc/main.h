@@ -60,10 +60,6 @@
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
-#define ESC_TIM_CNT_END 20000
-#define ESC_TIM_PERIOD_1MS 1000
-#define ESC_TIM_PERIOD_2MS 2000
-#define ESC_PSC_84MHz_1MHz 83
 
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC

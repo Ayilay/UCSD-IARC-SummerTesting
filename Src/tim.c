@@ -41,7 +41,6 @@
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /* TIM2 init function */
@@ -54,9 +53,9 @@ void MX_TIM2_Init(void)
   /* Peripheral clock enable */
   LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
 
-  TIM_InitStruct.Prescaler = ESC_PSC_84MHz_1MHz;
+  TIM_InitStruct.Prescaler = 0;
   TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-  TIM_InitStruct.Autoreload = ESC_TIM_CNT_END;
+  TIM_InitStruct.Autoreload = 0;
   TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
   LL_TIM_Init(TIM2, &TIM_InitStruct);
 
