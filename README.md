@@ -1,4 +1,4 @@
-# UCSD-IARC-SummerTesting
+# UCSD IARC FirmwareDev
 This repository contains code for UCSD's International Aerial Robotics Competition. The code here is for a Nucleo F446RE, which is used to develop firmware that will be used on our final Quadcopters in the future
 
 ## Directory Structure
