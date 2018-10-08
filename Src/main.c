@@ -56,9 +56,10 @@
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-#define START_OF_DATA 0xFF
-#define END_OF_DATA   0x38
-#define DATA_SIZE     38
+
+// Frame indicators (semi-arbitrarily chosen)
+#define START_OF_DATA (0xFFDEADFF)
+#define END_OF_DATA   (0xEEDDAA77)
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -73,6 +74,21 @@ char* HALStatusToStr(HAL_StatusTypeDef status);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+
+
+// The packet that will be sent over uart, will contain the full data frame
+
+// A convenient structure for storing the data
+struct {
+  uint32_t sod;
+  float accelData[3];
+  float gyroData[3];
+  float magData[3];
+  uint32_t eod;
+} dataBufStruct;
+
+// Constants about the size of the data
+#define dataBufSize sizeof(dataBufStruct)
 
 /* USER CODE END 0 */
 
@@ -115,54 +131,25 @@ int main(void)
   //ESC_Init();
   MPU_Init();
 
-  // This object will make it easier to send the data
-  //char dataToSendBuf[DATA_SIZE+20] = {0};
-  //struct {
-  //  float accelData[3];
-  //  float gyroData[3];
-  //  float magData[3];
-  //} dataBuffer;
-
-  //dataBuffer.startOfData = START_OF_DATA;
-  //dataBuffer.endOfData = END_OF_DATA;
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  // Constants about the size of the data
-  const int numData = 9;
-  const int dataBufSize = 2 + numData*sizeof(float);
-
-  // Offsets for the buffer to send (so that it can be properly populated)
-  const int SOD_OFFSET  = 0;
-  const int DATA_OFFSET = 1;
-  const int EOD_OFFSET  = dataBufSize-1;
-
-  // A convenient structure for storing the data
-  struct {
-    float accelData[3];
-    float gyroData[3];
-    float magData[3];
-  } dataBuffer;
-
-  // The packet that will be sent over uart, will contain the full data frame
-  char dataToSendBuf[dataBufSize];
 
   while (1)
   {
     // Populate the data buffer with the sensor data (possible incompatible endianness)
-    MPU_GetAccelerations(&dataBuffer.accelData[0], &dataBuffer.accelData[1], &dataBuffer.accelData[2]);
-    MPU_GetGyroscope(&dataBuffer.gyroData[0], &dataBuffer.gyroData[1], &dataBuffer.gyroData[2]);
-    MPU_GetAccelerations(&dataBuffer.magData[0], &dataBuffer.magData[1], &dataBuffer.magData[2]);
+    MPU_GetAccelerations(&dataBufStruct.accelData[0], &dataBufStruct.accelData[1], &dataBufStruct.accelData[2]);
+    MPU_GetGyroscope(&dataBufStruct.gyroData[0], &dataBufStruct.gyroData[1], &dataBufStruct.gyroData[2]);
+    MPU_GetAccelerations(&dataBufStruct.magData[0], &dataBufStruct.magData[1], &dataBufStruct.magData[2]);
 
-    // Create the data frame with SOD and EOD indicators
-    dataToSendBuf[SOD_OFFSET]  = START_OF_DATA;
-    dataToSendBuf[EOD_OFFSET]  = END_OF_DATA;
-    memcpy(&dataToSendBuf[DATA_OFFSET], &dataBuffer, numData*sizeof(float));
+    // Add the SOD and EOD frame indicators
+    dataBufStruct.sod = START_OF_DATA;
+    dataBufStruct.eod = END_OF_DATA;
 
-    UsartSend(dataToSendBuf, dataBufSize, &huart2);
+    // Use Hongtao's Nice Hardware Libraries to stream the data over uart
+    UsartSend((char*) &dataBufStruct, dataBufSize, &huart2);
     HAL_Delay(1000);
 
   /* USER CODE END WHILE */
