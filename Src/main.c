@@ -42,6 +42,7 @@
 #include "i2c.h"
 #include "spi.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
@@ -49,9 +50,15 @@
 #include "ssd1306.h"
 #include "esc.h"
 
+#include "UserUsart.h"
+#include "string.h"
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+#define START_OF_DATA 0xFF
+#define END_OF_DATA   0x38
+#define DATA_SIZE     38
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -100,35 +107,67 @@ int main(void)
   MX_TIM2_Init();
   MX_SPI1_Init();
   MX_I2C1_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
   // Initialize the sensors
   //SSD1306_Init();
-  //MPU_Init();
-  ESC_Init();
+  //ESC_Init();
+  MPU_Init();
 
+  // This object will make it easier to send the data
+  //char dataToSendBuf[DATA_SIZE+20] = {0};
+  //struct {
+  //  float accelData[3];
+  //  float gyroData[3];
+  //  float magData[3];
+  //} dataBuffer;
 
+  //dataBuffer.startOfData = START_OF_DATA;
+  //dataBuffer.endOfData = END_OF_DATA;
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  // Constants about the size of the data
+  const int numData = 9;
+  const int dataBufSize = 2 + numData*sizeof(float);
+
+  // Offsets for the buffer to send (so that it can be properly populated)
+  const int SOD_OFFSET  = 0;
+  const int DATA_OFFSET = 1;
+  const int EOD_OFFSET  = dataBufSize-1;
+
+  // A convenient structure for storing the data
+  struct {
+    float accelData[3];
+    float gyroData[3];
+    float magData[3];
+  } dataBuffer;
+
+  // The packet that will be sent over uart, will contain the full data frame
+  char dataToSendBuf[dataBufSize];
+
   while (1)
   {
+    // Populate the data buffer with the sensor data (possible incompatible endianness)
+    MPU_GetAccelerations(&dataBuffer.accelData[0], &dataBuffer.accelData[1], &dataBuffer.accelData[2]);
+    MPU_GetGyroscope(&dataBuffer.gyroData[0], &dataBuffer.gyroData[1], &dataBuffer.gyroData[2]);
+    MPU_GetAccelerations(&dataBuffer.magData[0], &dataBuffer.magData[1], &dataBuffer.magData[2]);
+
+    // Create the data frame with SOD and EOD indicators
+    dataToSendBuf[SOD_OFFSET]  = START_OF_DATA;
+    dataToSendBuf[EOD_OFFSET]  = END_OF_DATA;
+    memcpy(&dataToSendBuf[DATA_OFFSET], &dataBuffer, numData*sizeof(float));
+
+    UsartSend(dataToSendBuf, dataBufSize, &huart2);
+    HAL_Delay(1000);
+
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-    ESC_SetSpeed(ESC1, 0.25);
-    ESC_SetSpeed(ESC2, 0.50);
-    ESC_SetSpeed(ESC3, 0.75);
-    ESC_SetSpeed(ESC4, 1.00);
-    HAL_Delay(200);
-
-    ESC_Stop(ESC1);
-    ESC_Stop(ESC2);
-    //ESC_Stop(ESC3);
-    //ESC_Stop(ESC4);
-    HAL_Delay(200);
 
   }
   /* USER CODE END 3 */
