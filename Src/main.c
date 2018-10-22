@@ -57,12 +57,12 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+/* USER CODE BEGIN PV */
+
 // Frame indicators (semi-arbitrarily chosen)
 #define START_OF_DATA (0xFFDEADFF)
 #define END_OF_DATA   (0xEEDDAA77)
 
-/* USER CODE BEGIN PV */
-/* Private variables ---------------------------------------------------------*/
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -123,7 +123,7 @@ int main(void)
   MX_TIM2_Init();
   MX_SPI1_Init();
   MX_I2C1_Init();
-  MX_USART2_UART_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
   // Initialize the sensors
@@ -149,8 +149,11 @@ int main(void)
     dataBufStruct.eod = END_OF_DATA;
 
     // Use Hongtao's Nice Hardware Libraries to stream the data over uart
-    UsartSend((char*) &dataBufStruct, dataBufSize, &huart2);
-    HAL_Delay(1000);
+    //UsartSend((char*) &dataBufStruct, dataBufSize, &huart1);
+
+    char buf[64] = "Hello, from bluetooth!\r\n\0";
+    UsartSend(buf, strlen(buf), &huart1);
+    HAL_Delay(100);
 
   /* USER CODE END WHILE */
 
