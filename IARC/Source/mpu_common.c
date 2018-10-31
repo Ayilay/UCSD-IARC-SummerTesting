@@ -15,12 +15,14 @@
  *
  *     Author:               Georges Troulis
  *     Email:                gtroulis@ucsd.edu
- *     Driver Version:       0.2.0
- *     Last Revision Date:   08/26/2018
+ *     Driver Version:       0.3.0
+ *     Last Revision Date:   10/31/2018
  *
  *     ================================================================================
  *
  *     Changelog:
+ *       0.3.0:              Added MPU_SampleAndSerialize function to sample all MPU sensors
+ *                            and serialize it to a single data packet
  *       0.2.0:              Disabled sleep mode in Init()
  */
 
@@ -213,6 +215,39 @@ HAL_StatusTypeDef MPU_GetTemperature(float* temp) {
   *temp *= 100;
 
   return status;
+}
+
+/**
+ *  Samples the accelerometer, gyroscope, and magnetometer, and constructs places
+ *  all the data in a single "serial packet" such that it can be transmited over any
+ *  desired interface.
+ *
+ *  To use this function:
+ *    1) Allocate space for an MPUDataPacket_t type either statically
+ *       (preferred) or dynamically (avoid if possible). Then
+ *    2) Call this function, passing in the adress of the allocated space
+ *    3) Use the desired peripheral (UART, SPI, etc) to stream the entire packet in
+ *       one shot, using sizeof(MPUDataPacket_t) as the number of bytes to stream.
+ *       A typecast to a char* or uint8_t* might be necessary (see example below).
+ *
+ *  Example usage to stream sensor data over UART:
+ *
+ *    MPUDataPacket_t dataPacket;
+ *    MPU_SampleAndSerialize(&dataPacket);
+ *    UsartSend((char*) &dataPacket, sizeof(dataPacket), &huart2);
+ *
+ *  packet: pointer to an allocated memory location to place all the sensor data in
+ */
+void MPU_SampleAndSerialize(MPUDataPacket_t* packet) {
+
+    // Add the start and end of data frame indicators
+    packet->sod = MPU_SERIAL_SOD;
+    packet->eod = MPU_SERIAL_EOD;
+
+    // Sample the sensor and place the sampled data in the data packet
+    MPU_GetAccelerations(&packet->accelData[0], &packet->accelData[1], &packet->accelData[2]);
+    MPU_GetGyroscope(&packet->gyroData[0], &packet->gyroData[1], &packet->gyroData[2]);
+    MPU_GetAccelerations(&packet->magData[0], &packet->magData[1], &packet->magData[2]);
 }
 
 /**

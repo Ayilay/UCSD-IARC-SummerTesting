@@ -75,21 +75,6 @@ char* HALStatusToStr(HAL_StatusTypeDef status);
 
 /* USER CODE BEGIN 0 */
 
-
-// The packet that will be sent over uart, will contain the full data frame
-
-// A convenient structure for storing the data
-struct {
-  uint32_t sod;
-  float accelData[3];
-  float gyroData[3];
-  float magData[3];
-  uint32_t eod;
-} dataBufStruct;
-
-// Constants about the size of the data
-#define dataBufSize sizeof(dataBufStruct)
-
 /* USER CODE END 0 */
 
 /**
@@ -136,20 +121,17 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  MPUDataPacket_t dataPacket;
 
   while (1)
   {
-    // Populate the data buffer with the sensor data (possible incompatible endianness)
-    MPU_GetAccelerations(&dataBufStruct.accelData[0], &dataBufStruct.accelData[1], &dataBufStruct.accelData[2]);
-    MPU_GetGyroscope(&dataBufStruct.gyroData[0], &dataBufStruct.gyroData[1], &dataBufStruct.gyroData[2]);
-    MPU_GetAccelerations(&dataBufStruct.magData[0], &dataBufStruct.magData[1], &dataBufStruct.magData[2]);
 
-    // Add the SOD and EOD frame indicators
-    dataBufStruct.sod = START_OF_DATA;
-    dataBufStruct.eod = END_OF_DATA;
+    // Sample the accelerometer, gyroscope, and magnetometer data, and place it all
+    // in a single serial packet to transmit over UART
+    MPU_SampleAndSerialize(&dataPacket);
 
-    // Use Hongtao's Nice Hardware Libraries to stream the data over uart
-    UsartSend((char*) &dataBufStruct, dataBufSize, &huart2);
+    // Use Hongtao's Nice Hardware Libraries to stream the sensor data over uart
+    UsartSend((char*) &dataPacket, sizeof(MPUDataPacket_t), &huart2);
     HAL_Delay(1000);
 
   /* USER CODE END WHILE */

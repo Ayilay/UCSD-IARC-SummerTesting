@@ -22,14 +22,15 @@
  *
  *     Author:               Georges Troulis
  *     Email:                gtroulis@ucsd.edu
- *     Driver Version:       0.1.0
- *     Last Revision Date:   08/26/2018
+ *     Driver Version:       0.3.0
+ *     Last Revision Date:   10/31/2018
  *
  *    ================================================================================
  *
  *    Changelog:
- *      0.1.0:              Renamed mpu9255.h to mpu_common.h to accommodate
- *                          for multiple MPU sensors (MPU_9255 and MPU_9150)
+ *      0.3.0:              Added MPU_SampleAndSerialize function to sample all MPU sensors
+ *                           and serialize it to a single data packet
+ *      0.2.0:              Disabled sleep mode in Init()
  */
 
 #ifndef __MPU_COMMON_H
@@ -50,7 +51,6 @@
 
 //#define MPU_9255
 #define MPU_9150
-
 
 /*------------------------------------------------------------*/
 //  (4) Important Macro Definitions and Error Checking
@@ -124,10 +124,28 @@
 #define MPU_GYRO_FS_2000DPS 0x03
 
 /*------------------------------------------------------------*/
+//  Internal Data Structures
+/*------------------------------------------------------------*/
+
+// Contains all the relevant sensor info with packet headers/footers
+// to facilitate with streaming sensor data over a serial interface
+typedef struct {
+  uint32_t sod;
+  float accelData[3];
+  float gyroData[3];
+  float magData[3];
+  uint32_t eod;
+} MPUDataPacket_t;
+
+/*------------------------------------------------------------*/
 //  Other Constants
 /*------------------------------------------------------------*/
 
 #define MPU_DEFAULT_TIMEOUT  200
+
+// Serial Start of Data and End of Data frame headers (arbitrarily chosen)
+#define MPU_SERIAL_SOD (0xFFDEADFF)
+#define MPU_SERIAL_EOD (0xEEDDAA77)
 
 /*------------------------------------------------------------*/
 //  Public Interface Functions
@@ -140,6 +158,9 @@ HAL_StatusTypeDef MPU_GetGyroscope(float *gx, float *gy, float *gz);
 HAL_StatusTypeDef MPU_GetAccelerations(float *ax, float *ay, float *az);
 HAL_StatusTypeDef MPU_SetAccelFSRange(uint8_t range);
 HAL_StatusTypeDef MPU_SetGyroFSRange(uint8_t range);
+
+// Data Transportation Funcs
+void MPU_SampleAndSerialize(MPUDataPacket_t* packet);
 
 // Debug Funcs
 HAL_StatusTypeDef MPU_GetGyroscopeRaw(int16_t *gx, int16_t *gy, int16_t *gz);
